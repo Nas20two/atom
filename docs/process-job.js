@@ -10,8 +10,14 @@ import { mkdir, writeFile, readFile } from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
 
-const ATOM_JOBS_DIR = "/tmp/atom-jobs";
-const DELIVERABLES_DIR = path.join(process.env.HOME, "Desktop", "Atom-Deliverables");
+const ATOM_JOBS_DIR = process.env.ATOM_JOBS_DIR || "/tmp/atom-jobs";
+const DELIVERABLES_DIR =
+  process.env.ATOM_DELIVERABLES_DIR ||
+  path.join(process.env.HOME || "", "Desktop", "Atom-Deliverables");
+
+// Single, consistent Fal model. Override with FAL_MODEL — do NOT hardcode
+// different model ids in different spots (that caused drift/mismatch before).
+const FAL_MODEL = process.env.FAL_MODEL || "fal-ai/wan/v2.2-a14b/text-to-video";
 
 // ─── Template prompt generators ───────────────────────────────────────────────
 
@@ -112,7 +118,7 @@ async function falPoll(job, maxAttempts = 90) {
 }
 
 async function falGenerateVideo(prompt, options = {}) {
-  const { model = "fal-ai/wan/v2.2-a14b/text-to-video", duration = 10, aspectRatio = "9:16" } = options;
+  const { model = FAL_MODEL, duration = 10, aspectRatio = "9:16" } = options;
   const payload = { prompt, aspect_ratio: aspectRatio };
   const job = await falSubmit(model, payload);
   console.log(`  Submitted to model, polling...`);
@@ -199,7 +205,7 @@ async function processJob(jobPath, options = {}) {
   await writeFile(path.join(deliverableDir, "customer-summary.md"), summary);
 
   // Step 5: Video generation via Fal.ai
-  console.log(`[5/5] Generating video via Fal.ai (Wan 2.5)...`);
+  console.log(`[5/5] Generating video via Fal.ai (${FAL_MODEL})...`);
 
   const aspectRatio = template === "real-estate" ? "16:9" : "9:16";
   const clipDuration = (tier === "premium" || tier === "pro") ? 15 : 10;
@@ -213,10 +219,12 @@ async function processJob(jobPath, options = {}) {
 
     try {
       await falGenerateAndDownload(prompts[i], outputPath, {
-        model: "fal-ai/wan-2.5",
+        model: FAL_MODEL,
         duration: clipDuration,
         aspectRatio,
       });
+      // NOTE: 0.05 * clipDuration is an ESTIMATE. Track real per-model pricing
+      // (see docs.fal.ai) before quoting customers or gating on balance.
       totalCost += 0.05 * clipDuration;
     } catch (err) {
       console.error(`  Scene ${i + 1} FAILED: ${err.message}`);
@@ -239,7 +247,7 @@ async function processJob(jobPath, options = {}) {
       `Generated: ${new Date().toISOString()}`,
       ``,
       `Status: COMPLETED`,
-      `Render Engine: fal-ai/wan-2.5`,
+      `Render Engine: ${FAL_MODEL}`,
       `Estimated Cost: ~$${totalCost.toFixed(2)} USD (from $20 Fal.ai balance)`,
       ``,
       `Deliverables:`,
@@ -256,7 +264,7 @@ async function processJob(jobPath, options = {}) {
   job.status = "completed";
   job.deliverableDir = deliverableDir;
   job.processedAt = new Date().toISOString();
-  job.renderEngine = "fal-ai/wan-2.5";
+  job.renderEngine = FAL_MODEL;
   job.estimatedCost = totalCost.toFixed(2);
   await writeFile(jobPath, JSON.stringify(job, null, 2));
 

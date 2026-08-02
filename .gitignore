@@ -1,0 +1,10 @@
+node_modules/
+.next/
+.env
+.env.local
+*.mp4
+*.mov
+*.zip
+.DS_Store
+**/.DS_Store
+Thumbs.db

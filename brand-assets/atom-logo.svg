@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60">
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <radialGradient id="nucleus" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff8c42"/>
+      <stop offset="60%" stop-color="#e8642c"/>
+      <stop offset="100%" stop-color="#cc4400"/>
+    </radialGradient>
+    <linearGradient id="orbit1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#006efe" stop-opacity="0.3"/>
+      <stop offset="50%" stop-color="#4a9eff" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#006efe" stop-opacity="0.3"/>
+    </linearGradient>
+    <linearGradient id="orbit2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#006efe" stop-opacity="0.3"/>
+      <stop offset="50%" stop-color="#38bdf8" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#006efe" stop-opacity="0.3"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Atom Icon -->
+  <g transform="translate(30, 30)" filter="url(#glow)">
+    <!-- Orbit 1 — horizontal ellipse -->
+    <ellipse cx="0" cy="0" rx="22" ry="8" fill="none" stroke="#4a9eff" stroke-width="1.5" stroke-linecap="round" opacity="0.8"/>
+    <!-- Orbit 2 — tilted left -->
+    <ellipse cx="0" cy="0" rx="22" ry="8" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-linecap="round" opacity="0.8" transform="rotate(60)"/>
+    <!-- Orbit 3 — tilted right -->
+    <ellipse cx="0" cy="0" rx="22" ry="8" fill="none" stroke="#4a9eff" stroke-width="1.5" stroke-linecap="round" opacity="0.8" transform="rotate(-60)"/>
+    <!-- Nucleus -->
+    <circle cx="0" cy="0" r="4" fill="url(#nucleus)"/>
+    <circle cx="0" cy="0" r="2.5" fill="#ff9f4a" opacity="0.6"/>
+  </g>
+
+  <!-- Atom Wordmark -->
+  <text x="72" y="36" font-family="Inter, -apple-system, Helvetica Neue, Arial, sans-serif" font-size="24" font-weight="700" fill="white" letter-spacing="1">Atom</text>
+</svg>

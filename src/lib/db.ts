@@ -144,3 +144,22 @@ export async function getOrderStatus(
   `) as Row[];
   return rows.length > 0 ? { status: rows[0].status, tier: rows[0].tier } : null;
 }
+
+/**
+ * Mark an order failed. Used when Fal enqueue partially fails after the order
+ * was inserted — we must NOT leave it at 'created' (silently stranded with no
+ * retry path). A failed order is visible to a support/delivery retry. The
+ * reason is logged by the caller rather than stored (no schema change).
+ */
+export async function markOrderFailed(
+  db: Db,
+  orderId: string,
+  reason?: string
+): Promise<void> {
+  console.error(`[db] order ${orderId} marked failed${reason ? ` — ${reason}` : ""}`);
+  await db`
+    update orders
+    set status = 'failed', updated_at = now()
+    where order_id = ${orderId}
+  `;
+}

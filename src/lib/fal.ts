@@ -37,7 +37,8 @@ function buildPrompt(order: FalOrder, clipIndex: number, totalClips: number): st
  * NOT poll inside the request handler.
  */
 export async function enqueueFalJob(
-  order: FalOrder
+  order: FalOrder,
+  onClip?: (clipIndex: number, requestId: string, model: string) => void | Promise<void>
 ): Promise<{ requestIds: string[]; model: string }> {
   const output = { requestIds: [] as string[], model: "" };
 
@@ -71,6 +72,9 @@ export async function enqueueFalJob(
 
     const { request_id: requestId } = await fal.queue.submit(model, options);
     output.requestIds.push(requestId);
+    // Persist this clip immediately so a later failure can't orphan it (a
+    // submitted render with no DB row = unqualified Fal spend).
+    if (onClip) await onClip(i, requestId, model);
     console.log(`[Fal] Submitted ${model} (clip ${i + 1}/${clips}) — request_id=${requestId}`);
   }
 

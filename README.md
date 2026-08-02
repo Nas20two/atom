@@ -26,20 +26,47 @@ AI-powered video generation for businesses. Turn a simple prompt into a cinemati
 4. Webhook verifies signature → marks order paid → enqueues Fal job (ack 200 fast)
 5. Fal webhook marks video completed → store URL → serve via signed URL
 
-**Stack:** Next.js + TypeScript + Stripe Checkout + Fal.ai + Postgres (Vercel/Neon/Supabase)
+**Stack:** Next.js + TypeScript + Stripe Checkout (one-time, pay-per-video) + Fal.ai + Postgres (Vercel/Neon/Supabase)
+
+## Getting Started
+
+```bash
+npm install
+cp .env.example .env.local   # fill in Stripe + Fal keys and a Price ID per tier
+npm run dev                  # http://localhost:3000
+```
 
 ## Key Files
 
-- `docs/atom-processor.js` — Job processor (env-based API keys, never hardcode)
-- `docs/atom-webhook-receiver.js` — Receives Vercel jobs → generates prompts → deliverables
-- `docs/process-job.js` — Fal.ai queue job execution
+- `src/app/` — Next.js App Router pages (landing, industries, pricing, success)
+- `src/lib/pricing.ts` — pay-per-video tiers → Stripe Price IDs (from env)
+- `src/app/api/create-atom-checkout/route.ts` — creates a one-time Stripe Checkout session
+- `src/app/api/webhooks/stripe/route.ts` — verifies the Stripe signature, marks an order paid, enqueues the Fal job
+- `src/app/api/webhooks/fal/route.ts` — Fal completion callback (guarded by a shared secret)
+- `src/app/api/atom-submit/route.ts` — success-page status check
+- `src/lib/fal.ts` — enqueues a paid order on the Fal queue (async, webhook-driven)
+- `docs/process-job.js` — standalone Fal renderer (env-configured paths/model)
 - `docs/atom-lucid-agent-skill.md` — Agent operating skill
+
+## Architecture (Core Flow)
+
+**order → queue → webhook → fulfillment** — Fal.ai generation is async (seconds to minutes), so never generate inside a request.
+
+1. User fills the form → selects a pay-per-video tier
+2. Server creates a one-time Stripe Checkout Session with `orderId` metadata
+3. Stripe redirects to success; `checkout.session.completed` fires to `/api/webhooks/stripe`
+4. Webhook verifies the signature → enqueues the Fal job (acks fast)
+5. Fal calls `/api/webhooks/fal` when the render completes → store URL → serve via signed URL
+
+> The old standalone `docs/atom-webhook-receiver.js` (plain, unauthenticated POST that triggered paid generation) was removed — that open-spend door is closed. The Veo/OpenRouter processor (`docs/atom-processor.js`) was removed in favour of the Fal pipeline.
 
 ## Security
 
-- API keys via environment variables only (`FAL_KEY`, `OPENROUTER_API_KEY`, etc.)
-- Verify Stripe webhook signatures with `constructEvent`
+- API keys via environment variables only (`STRIPE_SECRET_KEY`, `FAL_KEY`, …) — see `.env.example`
+- Stripe webhook signature verified with `constructEvent` — rejected without a valid signature + secret
+- Fal completion webhook guarded by a shared secret (`FAL_WEBHOOK_SECRET`, Bearer token)
 - Serve generated videos via expiring signed URLs — never expose the bucket
+- Persistence (orders/video state → Postgres on Vercel/Neon/Supabase) is the planned next step
 
 ---
 

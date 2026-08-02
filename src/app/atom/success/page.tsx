@@ -9,7 +9,13 @@ import { useSearchParams } from "next/navigation";
 function SuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
-  const tier = searchParams.get("tier") || "premium";
+  const tierParam = searchParams.get("tier") || "pro";
+  const tierLabel =
+    tierParam === "basic"
+      ? "One Video"
+      : tierParam === "agent"
+      ? "Marketing Agent"
+      : "Pro";
   const [jobStatus, setJobStatus] = useState<string>("checking");
 
   useEffect(() => {
@@ -52,7 +58,7 @@ function SuccessContent() {
       </div>
       <h1 className="text-3xl font-bold text-foreground mb-2">Payment Confirmed!</h1>
       <p className="text-muted-foreground mb-6">
-        Your {tier === "pro" ? "Pro" : tier === "premium" ? "Premium" : "Basic"} video is queued.
+        Your {tierLabel} video is queued.
         Atom will deliver your 60-second MP4 to your email within 24 hours.
       </p>
       <div className="p-4 rounded-xl bg-card/80 border border-border mb-6 text-left text-sm text-muted-foreground space-y-1">
@@ -62,8 +68,8 @@ function SuccessContent() {
         <p>📬 Delivery queued to your inbox</p>
       </div>
       <p className="text-xs text-muted-foreground mb-6">
-        Didn't receive an email? Check your spam folder or{" "}
-        <Link href="/contact" className="text-primary hover:underline">contact us</Link>.
+        Did not receive an email? Check your spam folder — videos are delivered to
+        your payment email within 24 hours.
       </p>
       <Link
         href="/atom"

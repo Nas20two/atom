@@ -239,6 +239,14 @@ export default function AtomPage() {
     document.title = "Atom — AI Video Generator | Real Estate, Wellness & Healthcare Templates";
   }, []);
 
+  // Honor a ?tier= query param (e.g. when arriving from the pricing page),
+  // preselecting the corresponding pay-per-video tier in the checkout section.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get("tier");
+    if (t === "basic" || t === "pro" || t === "agent") setTier(t);
+  }, []);
+
   const handleResearch = async () => {
     if (!product) { setError("Enter a product description first"); return; }
     setResearchLoading(true); setResearchError(""); setResearch(null);

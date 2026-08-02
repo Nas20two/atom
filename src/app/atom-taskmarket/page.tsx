@@ -63,7 +63,7 @@ export default function AtomTaskMarketPage() {
             <p>2. Submit a task to the Agent</p>
             <code className="block bg-black/30 p-3 rounded text-xs">
               npx @lucid-agents/taskmarket task create \<br/>
-              &nbsp;&nbsp;--description "60s real estate video for beachfront property" \<br/>
+              &nbsp;&nbsp;--description &quot;60s real estate video for beachfront property&quot; \<br/>
               &nbsp;&nbsp;--reward 5000000
             </code>
             <p className="text-yellow-400 text-xs mt-4">

@@ -68,8 +68,8 @@ function SuccessContent() {
         <p>📬 Delivery queued to your inbox</p>
       </div>
       <p className="text-xs text-muted-foreground mb-6">
-        Didn't receive an email? Check your spam folder or{" "}
-        <Link href="/contact" className="text-primary hover:underline">contact us</Link>.
+        Did not receive an email? Check your spam folder — videos are delivered to
+        your payment email within 24 hours.
       </p>
       <Link
         href="/atom"

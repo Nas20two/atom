@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Music, Film, ArrowRight, Building2, Heart, Stethoscope, MoreHorizontal, Check, AtomIcon, Volume2, Wrench, UtensilsCrossed, GraduationCap, Dumbbell, Car, Briefcase, X, Target, Lightbulb, Users, Globe, Film as FilmIcon, FileText, TrendingUp, MessageSquare, Handshake, Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { Sparkles, Film, ArrowRight, Building2, Heart, Stethoscope, MoreHorizontal, Check, AtomIcon, Volume2, Wrench, UtensilsCrossed, GraduationCap, Dumbbell, Car, Briefcase } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
@@ -202,15 +202,13 @@ const tiers = [
   {
     name: "Marketing Agent",
     price: 29,
-    desc: "Monthly subscription — 2 videos/mo with AI audience research + Facebook-ready export.",
-    monthly: true,
+    desc: "One 60-second video with AI audience research + Facebook-ready export.",
     features: [
-      "2× 60-second videos per month",
+      "1× 60-second video",
       "AI audience research (pain points + hooks + platform)",
       "Static brand image per video",
       "Facebook-ready export (caption + hashtags + thumbnail)",
       "Automatic brand consistency check",
-      "Cancel anytime — no lock-in",
     ],
     priceId: "agent",
   },
@@ -224,17 +222,6 @@ export default function AtomPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Research state
-  const [research, setResearch] = useState<any>(null);
-  const [researchLoading, setResearchLoading] = useState(false);
-  const [researchError, setResearchError] = useState("");
-  // Campaign modal state
-  const [showCampaignModal, setShowCampaignModal] = useState(false);
-  const [campaignForm, setCampaignForm] = useState({ productName: "", valueProp: "", targetAudience: "", industry: "" });
-  const [campaignLoading, setCampaignLoading] = useState(false);
-  const [campaignPlan, setCampaignPlan] = useState<any>(null);
-  const [campaignError, setCampaignError] = useState("");
-
   useEffect(() => {
     document.title = "Atom — AI Video Generator | Real Estate, Wellness & Healthcare Templates";
   }, []);
@@ -246,22 +233,6 @@ export default function AtomPage() {
     const t = params.get("tier");
     if (t === "basic" || t === "pro" || t === "agent") setTier(t);
   }, []);
-
-  const handleResearch = async () => {
-    if (!product) { setError("Enter a product description first"); return; }
-    setResearchLoading(true); setResearchError(""); setResearch(null);
-    try {
-      const res = await fetch("/api/atom/research", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productName: product, valueProp: product, industry: "" }),
-      });
-      const data = await res.json();
-      if (data.success && data.research) { setResearch(data.research); }
-      else { setResearchError(data.error || "Research failed"); }
-    } catch { setResearchError("Failed to research audience"); }
-    finally { setResearchLoading(false); }
-  };
 
   const handleCheckout = async () => {
     if (!email) { setError("Email is required"); return; }
@@ -278,31 +249,7 @@ export default function AtomPage() {
       else { setError(data.error || "Something went wrong"); }
     } catch { setError("Failed to create checkout session"); }
     finally { setLoading(false); }
-  };
-
-  const generateCampaignPlan = async () => {
-    if (!campaignForm.productName || !campaignForm.valueProp) return;
-    setCampaignLoading(true);
-    setCampaignError("");
-    setCampaignPlan(null);
-    try {
-      const res = await fetch("/api/atom/generate-plan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(campaignForm),
-      });
-      const data = await res.json();
-      if (data.success && data.plan) {
-        setCampaignPlan(data.plan);
-      } else {
-        setCampaignError(data.error || "Failed to generate plan");
-      }
-    } catch {
-      setCampaignError("Failed to connect. Please try again.");
-    } finally {
-      setCampaignLoading(false);
-    }
-  };
+  }; // end handleCheckout
 
   return (
     <>
@@ -378,33 +325,6 @@ export default function AtomPage() {
                 <span className="px-2 py-0.5 rounded bg-green-500/10 text-green-400 text-xs font-medium">95% less</span>
               </div>
             </div>
-          </motion.div>
-
-          {/* —— Campaign CTA —— */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.35, duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <div className="inline-flex items-center gap-3 px-1">
-              <div className="h-px w-12 bg-gradient-to-r from-transparent to-blue-500/30" />
-              <span className="text-xs font-medium tracking-widest uppercase text-muted-foreground/50">Get Started</span>
-              <div className="h-px w-12 bg-gradient-to-l from-transparent to-orange-500/30" />
-            </div>
-            <motion.button
-              onClick={() => setShowCampaignModal(true)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="mt-6 group inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-orange-500 text-white font-semibold text-lg shadow-lg hover:shadow-xl transition-all"
-            >
-              <Target className="w-5 h-5" />
-              Launch Your Campaign
-              <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-            </motion.button>
-            <p className="text-xs text-muted-foreground/50 mt-3">
-              Get a full marketing plan + 60-second video in one go
-            </p>
           </motion.div>
 
           {/* —— Template Grid —— */}
@@ -716,7 +636,7 @@ export default function AtomPage() {
           >
             <h2 className="text-2xl font-bold text-center mb-2 text-foreground">Simple Pricing</h2>
             <p className="text-muted-foreground text-sm text-center mb-4">
-              One-time videos or a monthly plan. Same AI quality, same fast delivery.
+              One-time purchases. No subscriptions. Same AI quality, same fast delivery.
             </p>
             {/* Cost comparison banner */}
             <div className="max-w-lg mx-auto mb-10 p-4 rounded-xl border border-green-500/10 bg-green-500/5">
@@ -759,7 +679,7 @@ export default function AtomPage() {
                   <h3 className="text-lg font-semibold text-foreground mb-1">{t.name}</h3>
                   <div className="mb-3">
                     <span className="text-3xl font-bold text-foreground">${t.price}</span>
-                    <span className="text-muted-foreground text-sm">{t.monthly ? ' / month' : ' / short'}</span>
+                    <span className="text-muted-foreground text-sm">/ short</span>
                   </div>
                   <p className="text-sm text-muted-foreground mb-4">{t.desc}</p>
                   <ul className="space-y-2 mb-6 flex-1">
@@ -852,56 +772,10 @@ export default function AtomPage() {
                     rows={3}
                     className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all resize-none"
                     value={product}
-                    onChange={(e) => { setProduct(e.target.value); setResearch(null); }}
+                    onChange={(e) => setProduct(e.target.value)}
                   />
                 </div>
 
-                {/* Research button — shown for Marketing Agent tier */}
-                {tier === "agent" && !research && (
-                  <button
-                    onClick={handleResearch}
-                    disabled={researchLoading || !product}
-                    className="w-full mt-2 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border border-blue-500/30 bg-blue-500/5 text-blue-400 hover:bg-blue-500/10 transition-all disabled:opacity-50"
-                  >
-                    {researchLoading ? (
-                      <><Loader2 className="w-4 h-4 animate-spin" /> Researching your audience...</>
-                    ) : (
-                      <><Target className="w-4 h-4" /> Research Audience Pain Points</>
-                    )}
-                  </button>
-                )}
-
-                {/* Research results */}
-                {research && (
-                  <div className="p-4 rounded-xl border border-blue-500/15 bg-blue-500/5">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Target className="w-4 h-4 text-blue-400" />
-                      <h4 className="text-sm font-semibold text-foreground">AI Research Results</h4>
-                    </div>
-                    <div className="space-y-3 text-sm">
-                      <div>
-                        <p className="text-xs font-medium text-blue-400 mb-1">Top Hook</p>
-                        <p className="text-foreground font-medium">"{research.suggestedHook}"</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-blue-400 mb-1">Audience Pain Points</p>
-                        <ul className="space-y-1">
-                          {research.audiencePainPoints?.map((p: string, i: number) => (
-                            <li key={i} className="text-muted-foreground flex items-start gap-1.5">
-                              <span className="text-orange-400 mt-0.5">•</span> {p}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-blue-400 mb-1">Best Platform</p>
-                        <p className="text-muted-foreground">{research.bestPlatform}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {researchError && <p className="text-red-500 text-sm mt-2">{researchError}</p>}
                 {error && <p className="text-red-500 text-sm">{error}</p>}
               </div>
 
@@ -942,279 +816,6 @@ export default function AtomPage() {
         </div>
       </main>
 
-      {/* —— Campaign Modal —— */}
-      <AnimatePresence>
-        {showCampaignModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            onClick={() => !campaignLoading && setShowCampaignModal(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.3 }}
-              className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl border border-border bg-card p-6 md:p-8 shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Close button */}
-              <button
-                onClick={() => { setShowCampaignModal(false); setCampaignPlan(null); setCampaignError(""); }}
-                className="absolute top-4 right-4 p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                disabled={campaignLoading}
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              {/* Step 1: Form */}
-              {!campaignPlan && !campaignLoading && (
-                <div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-blue-500/20 bg-blue-500/5 text-blue-400 text-xs font-medium mb-4">
-                    <Target className="w-3.5 h-3.5" /> Plan a Campaign
-                  </div>
-                  <h2 className="text-2xl font-bold text-foreground mb-2">Launch Your Campaign</h2>
-                  <p className="text-muted-foreground text-sm mb-6">
-                    Tell us about your product and we'll generate a complete marketing strategy plus a 60-second video script.
-                  </p>
-
-                  {campaignError && (
-                    <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-                      {campaignError}
-                    </div>
-                  )}
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-1.5">
-                        Product / Business Name <span className="text-red-400">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={campaignForm.productName}
-                        onChange={(e) => setCampaignForm({ ...campaignForm, productName: e.target.value })}
-                        placeholder="e.g. Aurora Wellness Studio"
-                        className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-1.5">
-                        Value Proposition <span className="text-red-400">*</span>
-                      </label>
-                      <textarea
-                        value={campaignForm.valueProp}
-                        onChange={(e) => setCampaignForm({ ...campaignForm, valueProp: e.target.value })}
-                        placeholder="What makes this product unique? What problem does it solve?"
-                        rows={3}
-                        className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all resize-none"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-1.5">
-                          Target Audience
-                        </label>
-                        <input
-                          type="text"
-                          value={campaignForm.targetAudience}
-                          onChange={(e) => setCampaignForm({ ...campaignForm, targetAudience: e.target.value })}
-                          placeholder="e.g. Homeowners 35-55"
-                          className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-1.5">
-                          Industry
-                        </label>
-                        <select
-                          value={campaignForm.industry}
-                          onChange={(e) => setCampaignForm({ ...campaignForm, industry: e.target.value })}
-                          className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
-                        >
-                          <option value="">Select industry</option>
-                          <option value="real-estate">Real Estate</option>
-                          <option value="wellness">Wellness & Holistic</option>
-                          <option value="healthcare">Health & Medical</option>
-                          <option value="hospitality">Hospitality & Venues</option>
-                          <option value="fitness">Fitness & Gym</option>
-                          <option value="trades">Trades & Home Services</option>
-                          <option value="education">Education & Training</option>
-                          <option value="automotive">Automotive</option>
-                          <option value="professional">Professional Services</option>
-                          <option value="ecommerce">E-commerce & Retail</option>
-                          <option value="general">General / Other</option>
-                        </select>
-                      </div>
-                    </div>
-                    <button
-                      onClick={generateCampaignPlan}
-                      disabled={!campaignForm.productName || !campaignForm.valueProp}
-                      className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-orange-500 text-white font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Generate My Campaign Plan
-                      <Sparkles className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Loading */}
-              {campaignLoading && (
-                <div className="text-center py-12">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-orange-500/20 mb-4">
-                    <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">Generating Your Campaign</h3>
-                  <p className="text-sm text-muted-foreground">
-                    AI is creating your marketing strategy and video script...
-                  </p>
-                  <div className="mt-6 max-w-xs mx-auto">
-                    <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                      <motion.div
-                        className="h-full rounded-full bg-gradient-to-r from-blue-500 to-orange-500"
-                        animate={{ x: ["-100%", "200%"] }}
-                        transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: Results */}
-              {campaignPlan && !campaignLoading && (
-                <div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-green-500/20 bg-green-500/5 text-green-400 text-xs font-medium mb-4">
-                    <Check className="w-3.5 h-3.5" /> Campaign Plan Ready
-                  </div>
-                  <h2 className="text-2xl font-bold text-foreground mb-1">
-                    {campaignPlan.productInfo?.name || campaignForm.productName}
-                  </h2>
-                  <p className="text-muted-foreground text-sm mb-6">
-                    {campaignPlan.productInfo?.valueProp || campaignForm.valueProp}
-                  </p>
-
-                  {/* Content Marketing */}
-                  <div className="mb-6 p-4 rounded-xl border border-border bg-card/60">
-                    <div className="flex items-center gap-2 mb-3">
-                      <FileText className="w-4 h-4 text-blue-400" />
-                      <h3 className="font-semibold text-foreground text-sm">Content Marketing Ideas</h3>
-                    </div>
-                    <ul className="space-y-1.5">
-                      {campaignPlan.contentMarketing?.ideas?.map((idea: string, i: number) => (
-                        <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                          <span className="text-blue-400/70 mt-0.5 shrink-0">{i === 0 ? '★' : '•'}</span>
-                          {idea}
-                        </li>
-                      ))}
-                    </ul>
-                    {campaignPlan.contentMarketing?.topPick && (
-                      <div className="mt-3 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10">
-                        <p className="text-xs font-medium text-blue-400 mb-1">🎯 Top Pick</p>
-                        <p className="text-sm text-muted-foreground">{campaignPlan.contentMarketing.topPick.idea}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Social Media */}
-                  <div className="mb-6 p-4 rounded-xl border border-border bg-card/60">
-                    <div className="flex items-center gap-2 mb-3">
-                      <MessageSquare className="w-4 h-4 text-orange-400" />
-                      <h3 className="font-semibold text-foreground text-sm">Social Media Ideas</h3>
-                    </div>
-                    <ul className="space-y-1.5">
-                      {campaignPlan.socialMedia?.ideas?.map((idea: string, i: number) => (
-                        <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                          <span className="text-orange-400/70 mt-0.5 shrink-0">•</span>
-                          {idea}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Partnerships */}
-                  {campaignPlan.partnerships?.ideas?.length > 0 && (
-                    <div className="mb-6 p-4 rounded-xl border border-border bg-card/60">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Handshake className="w-4 h-4 text-green-400" />
-                        <h3 className="font-semibold text-foreground text-sm">Partnership Opportunities</h3>
-                      </div>
-                      <ul className="space-y-1.5">
-                        {campaignPlan.partnerships.ideas.map((idea: string, i: number) => (
-                          <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                            <span className="text-green-400/70 mt-0.5 shrink-0">•</span>
-                            {idea}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Next Steps */}
-                  {campaignPlan.nextSteps?.length > 0 && (
-                    <div className="mb-6 p-4 rounded-xl border border-border bg-card/60">
-                      <div className="flex items-center gap-2 mb-3">
-                        <TrendingUp className="w-4 h-4 text-purple-400" />
-                        <h3 className="font-semibold text-foreground text-sm">Next Steps</h3>
-                      </div>
-                      <ol className="space-y-1.5 list-decimal list-inside">
-                        {campaignPlan.nextSteps.map((step: string, i: number) => (
-                          <li key={i} className="text-sm text-muted-foreground">{step}</li>
-                        ))}
-                      </ol>
-                    </div>
-                  )}
-
-                  {/* Video Script Preview */}
-                  {campaignPlan.videoScript && (
-                    <div className="mb-6 p-4 rounded-xl border border-orange-500/20 bg-orange-500/5">
-                      <div className="flex items-center gap-2 mb-3">
-                        <FilmIcon className="w-4 h-4 text-orange-400" />
-                        <h3 className="font-semibold text-foreground text-sm">Video Script</h3>
-                      </div>
-                      {campaignPlan.videoScript.hook && (
-                        <p className="text-sm text-foreground font-medium mb-3 italic">
-                          "{campaignPlan.videoScript.hook}"
-                        </p>
-                      )}
-                      <div className="space-y-2">
-                        {campaignPlan.videoScript.scenes?.map((scene: any, i: number) => (
-                          <div key={i} className="text-xs">
-                            <span className="text-orange-400 font-medium">{scene.time}</span>
-                            <p className="text-muted-foreground mt-0.5">{scene.visual}</p>
-                            <p className="text-muted-foreground/70 italic">{scene.audio}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* CTA */}
-                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    <button
-                      onClick={() => {
-                        setShowCampaignModal(false);
-                        document.getElementById("templates")?.scrollIntoView({ behavior: "smooth" });
-                      }}
-                      className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-orange-500 text-white font-semibold hover:shadow-lg transition-all"
-                    >
-                      <Film className="w-4 h-4" />
-                      Create My Video
-                    </button>
-                    <button
-                      onClick={() => { setShowCampaignModal(false); setCampaignPlan(null); }}
-                      className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-border text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
-                    >
-                      Save & Come Back Later
-                    </button>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </>
   );
 }

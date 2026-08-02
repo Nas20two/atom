@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { enqueueFalJob } from "@/lib/fal";
 import { isTier } from "@/lib/pricing";
+import { getDbSafe, insertOrder, insertVideo, markOrderEnqueued } from "@/lib/db";
 
 /**
  * POST /api/webhooks/stripe
@@ -9,6 +10,10 @@ import { isTier } from "@/lib/pricing";
  * `constructEvent` before doing anything — without a valid signature + secret
  * the request is rejected, so an unauthenticated caller can't trigger paid
  * Fal generation. (This closes the open-spend door in the old docs receiver.)
+ *
+ * On checkout.session.completed we persist the order (idempotent on the unique
+ * order_id) and only then enqueue the paid Fal render — a duplicated webhook
+ * can't double-spend or double-generate.
  */
 export async function POST(req: NextRequest) {
   const signature = req.headers.get("stripe-signature");
@@ -51,15 +56,46 @@ export async function POST(req: NextRequest) {
     const orderId = session.metadata?.orderId;
     const tier = session.metadata?.tier;
     const email = session.metadata?.email || session.customer_details?.email || undefined;
-    const product = session.metadata?.product;
+    const product = session.metadata?.product || undefined;
+    const amountCents = session.amount_total ?? undefined;
 
-    if (orderId && isTier(tier)) {
-      await enqueueFalJob({ orderId, tier, email, product });
-    } else {
+    if (!orderId || !isTier(tier)) {
       console.warn("[Stripe] checkout.session.completed without a valid orderId/tier", {
         orderId,
         tier,
       });
+      return NextResponse.json({ received: true });
+    }
+
+    const db = getDbSafe();
+
+    if (db) {
+      const created = await insertOrder(db, { orderId, tier, email, product, amountCents });
+      if (!created) {
+        // Duplicate event — the order is already recorded (and enqueued).
+        console.warn(
+          "[Stripe] Duplicate checkout.session.completed for order — skipping re-enqueue",
+          { orderId }
+        );
+        return NextResponse.json({ received: true });
+      }
+
+      const { requestIds, model } = await enqueueFalJob({ orderId, tier, email, product });
+      if (requestIds.length === 0) {
+        // FAL_KEY not set — order stays 'created'. Paid but generation deferred.
+        return NextResponse.json({ received: true });
+      }
+      for (let i = 0; i < requestIds.length; i++) {
+        await insertVideo(db, { orderId, clipIndex: i, falRequestId: requestIds[i], model });
+      }
+      await markOrderEnqueued(db, orderId, model);
+    } else {
+      // No Neon configured (local dev). Fall back to enqueue-without-persist so
+      // Stripe test mode still works; production must set DATABASE_URL.
+      console.warn(
+        "[Stripe] DATABASE_URL not set — order not persisted; enqueueing without idempotency guard."
+      );
+      await enqueueFalJob({ orderId, tier, email, product });
     }
   }
 
